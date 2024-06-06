@@ -1,0 +1,37 @@
+version: '3.8'
+
+volumes:
+  db-data:
+
+services:
+  db:
+    container_name: ${DB_SERVER:-db}
+    image: mariadb:10.7.4
+    ports:
+      - "${DB_PORT:-4242}:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-prestashop}
+      MYSQL_DATABASE: ${DB_NAME:-prestashop}
+    restart: always
+    networks:
+      - ps_network
+
+  web:
+    build:
+      dockerfile: .docker/Dockerfile
+      context: .
+    container_name: ${PS_VERSION:-prestashop}
+    ports:
+      - "${PS_PORT:-8001}:80"
+    depends_on:
+      - db
+    volumes:
+      - ./html:/var/www/html
+    networks:
+      - ps_network
+
+networks:
+  ps_network:
+    driver: bridge
